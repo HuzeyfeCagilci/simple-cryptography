@@ -12,6 +12,10 @@ set_target_properties(simple-cryptography PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
+target_compile_definitions(simple-cryptography
+    PUBLIC SIMPLECRYPTO_EXPORTS
+)
+
 add_executable(test0 src/test0.cpp)
 add_executable(test1 src/test1.cpp)
 
@@ -27,3 +31,12 @@ add_test(NAME test1 COMMAND test1)
 
 include(CTest)
 enable_testing()
+
+if(NOT CMAKE_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install path prefix" FORCE)
+endif()
+
+install(TARGETS simple-cryptography
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)

@@ -3,18 +3,19 @@
 #ifndef __CRYPTO_H__
 #define __CRYPTO_H__
 
+#include "export.h"
 #include <string>
 #include <vector>
 
 #define _key_type_ std::vector<unsigned char>
 #define _size_type_ unsigned char
 
-void printhex(const char *data, int size);
+SIMPLECRYPTO_API void printhex(const char *data, int size);
 
 namespace SimpleCrypto
 {
 
-class Key
+class SIMPLECRYPTO_API Key
 {
   private:
     _key_type_ key;
@@ -35,9 +36,9 @@ class Key
     void printKey(std::string filename);
 };
 
-Key generateKey(_size_type_ size);
+SIMPLECRYPTO_API Key generateKey(_size_type_ size);
 
-class Crypto
+class SIMPLECRYPTO_API Crypto
 {
   protected:
     Key key;
@@ -50,7 +51,7 @@ class Crypto
     virtual char *decrypt(const char *encrypted_data, unsigned int dataSize) = 0;
 };
 
-class Crypto0 : public Crypto
+class SIMPLECRYPTO_API Crypto0 : public Crypto
 {
   public:
     Crypto0(Key key) : Crypto(key) {};
