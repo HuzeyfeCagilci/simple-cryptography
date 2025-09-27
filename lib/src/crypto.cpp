@@ -19,12 +19,35 @@ void printhex(const char *data, int size)
     }
 }
 
+_key_type_ hexTo(char *hex, int size)
+{
+    // ToDo:
+    _key_type_ kt(size / 2, 0);
+    int x = 16;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (hex[i] >= 'a' && hex[i] <= 'f')
+        {
+            kt[i / 2] += x * (hex[i] - 'a' + 10);
+        }
+        else if (hex[i] >= '0' && hex[i] <= '9')
+        {
+            kt[i / 2] += x * (hex[i] - '0');
+        }
+
+        x = x == 16 ? 1 : 16;
+    }
+
+    return kt;
+}
+
 namespace SimpleCrypto
 {
 
-Key::Key(_key_type_ &key, _size_type_ size)
+Key::Key(_key_type_ &key)
 {
-    this->size = size;
+    this->size = key.size();
     this->key = key;
 }
 
@@ -36,7 +59,7 @@ Key::Key(const Key &other)
 
 Key::Key(std::string filename)
 {
-    std::fstream fs(filename, std::ios::hex | std::ios::in);
+    std::fstream fs(filename, std::ios::in);
     if (!fs.is_open())
     {
         std::cout << "File Error" << std::endl;
@@ -47,13 +70,15 @@ Key::Key(std::string filename)
     size = (_size_type_)fs.tellg();
     fs.seekg(0, std::ios::beg);
 
-    key.reserve(size);
+    key.resize(size / 2);
 
     char *ch = new char[size];
 
     fs.read(ch, size);
-    key.reserve(size);
-    std::copy(ch, ch + size, key.begin());
+
+    _key_type_ tmp = hexTo(ch, size);
+
+    std::copy(tmp.begin(), tmp.end(), key.begin());
 
     fs.close();
     delete[] ch;
@@ -118,7 +143,7 @@ Key generateKey(_size_type_ size)
         elem = dist(generator);
     }
 
-    Key generatedKey(key_data, size);
+    Key generatedKey(key_data);
 
     return generatedKey;
 }

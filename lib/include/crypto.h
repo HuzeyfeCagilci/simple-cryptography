@@ -22,7 +22,7 @@ class SIMPLECRYPTO_API Key
     _size_type_ size;
 
   public:
-    Key(_key_type_ &key, _size_type_ size);
+    Key(_key_type_ &key);
     Key(const Key &other);
     Key(std::string filename);
 

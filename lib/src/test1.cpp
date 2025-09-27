@@ -21,5 +21,5 @@ int main()
     key.printKey(std::string(filename));
 
     Key key_(filename);
-    std::cout << "Key_:" << std::endl << key.getKeyStr() << std::endl;
+    std::cout << "Key_:" << std::endl << key_.getKeyStr() << std::endl;
 }
