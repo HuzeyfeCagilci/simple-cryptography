@@ -5,6 +5,7 @@
    with that key. */
 
 #include "crypto.h"
+#include <cstring>
 #include <iostream>
 
 using namespace SimpleCrypto;
