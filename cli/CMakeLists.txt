@@ -25,3 +25,4 @@ set_target_properties(cli PROPERTIES
 enable_testing()
 add_test(NAME cli_test0 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} COMMAND cli --encrypt --key-file test1.sckey --data-file test.txt -v)
 add_test(NAME cli_test1 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} COMMAND cli --encrypt --key ab12cd34 --data cumhuriyet1923 -v)
+add_test(NAME cli_test2 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} COMMAND cli --decrypt --key-file test1.sckey --data-file test.txt.sc -v)

@@ -18,14 +18,15 @@ int main()
     std::cout << "Generated Key: " << key.getKeyStr() << std::endl;
     Crypto0 crypto(key);
 
-    const char *data = "Hattı müdaafa yoktur, sathı müdafaa vardır. O satıh "
-                       "bütün vatandır. Vatanın her karış toprağı, vatandaşın "
-                       "kanıyla ıslanmadıkça, terke tabi değildir.";
+    std::string d = "Hattı müdaafa yoktur, sathı müdafaa vardır. O satıh "
+                    "bütün vatandır. Vatanın her karış toprağı, vatandaşın "
+                    "kanıyla ıslanmadıkça, terke tabi değildir.";
 
-    unsigned int dataSize = strlen(data) + 1;
+    std::vector<char> data(d.begin(), d.end());
+    int dataSize = data.size();
 
-    char *encrypted_data = crypto.encrypt(data, dataSize);
-    char *decrypted_data = crypto.decrypt(encrypted_data, dataSize);
+    auto encrypted_data = crypto.encrypt(data);
+    auto decrypted_data = crypto.decrypt(encrypted_data);
 
     bool success = true;
 
@@ -42,13 +43,11 @@ int main()
         return -1;
 
     std::cout << std::endl << "Original Data (hex):" << std::endl;
-    printhex(data, dataSize);
+    printhex(data);
 
     std::cout << std::endl << "Encrypted Data:" << std::endl;
-    printhex(encrypted_data, dataSize);
+    printhex(encrypted_data);
 
-    std::cout << std::endl << "Decrypted Data: " << decrypted_data << std::endl;
-
-    delete[] encrypted_data;
-    delete[] decrypted_data;
+    decrypted_data.push_back(0);
+    std::cout << std::endl << "Decrypted Data: " << decrypted_data.data() << std::endl;
 }

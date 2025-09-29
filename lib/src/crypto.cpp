@@ -8,20 +8,24 @@
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <utility>
 
-void printhex(const char *data, int size)
+void printhex(std::vector<char> data)
 {
+    int size = data.size();
     for (auto i = 0; i < size; i++)
     {
-        std::cout << std::hex << (unsigned int)(unsigned char)data[i];
+        std::cout << std::hex << (unsigned int)data[i];
         if ((i + 1) % 4 == 0)
             std::cout << ' ';
     }
+    std::cout << std::dec;
 }
 
-_key_type_ hexTo(char *hex, int size)
+_key_type_ hexTo(std::vector<char> hex)
 {
     // ToDo:
+    int size = hex.size();
     _key_type_ kt(size / 2, 0);
     int x = 16;
 
@@ -59,39 +63,28 @@ Key::Key(const Key &other)
 
 Key::Key(std::string filename)
 {
+    std::vector<char> hex;
     std::fstream fs(filename, std::ios::in);
+
     if (!fs.is_open())
     {
         std::cout << "File Error" << std::endl;
         exit(-1);
     }
 
-    fs.seekg(0, std::ios::end);
-    size = (_size_type_)fs.tellg();
-    fs.seekg(0, std::ios::beg);
-
-    key.resize(size / 2);
-
-    char *ch = new char[size];
-
-    fs.read(ch, size);
-
-    _key_type_ tmp = hexTo(ch, size);
-
-    std::copy(tmp.begin(), tmp.end(), key.begin());
+    std::copy(std::istreambuf_iterator<char>(fs), {}, std::back_inserter(hex));
+    key = hexTo(hex);
+    size = key.size();
 
     fs.close();
-    delete[] ch;
 }
 
 std::string Key::getKeyStr()
 {
     std::stringstream ss;
-    // char *keyStr = new char[size * 2 + 1];
     for (auto i : key)
         ss << std::hex << (unsigned int)i;
 
-    // delete[] keyStr;
     return std::string(ss.str());
 }
 
@@ -151,14 +144,12 @@ Key generateKey(_size_type_ size)
 /* Encrypts and mixes the data using the key.
    Since the mixing process is done according
    to the key, it can be reordered. */
-char *Crypto0::encrypt(const char *data, unsigned int dataSize)
+std::vector<char> Crypto0::encrypt(std::vector<char> data)
 {
-    char tmp;
-    char *encrypted_data = new char[dataSize];
+    std::vector<char> encrypted_data(data);
     int size = key.getSize();
+    int dataSize = data.size();
     _key_type_ key_data = key.getKey();
-
-    std::copy(data, data + dataSize, encrypted_data);
 
     for (auto i = 0; i < dataSize; i++)
     {
@@ -171,30 +162,25 @@ char *Crypto0::encrypt(const char *data, unsigned int dataSize)
     for (auto j = 0; j < size; j++)
     {
         int idx = key_data[j] % dataSize;
-        tmp = encrypted_data[idx];
-        encrypted_data[idx] = encrypted_data[dataSize - idx - 1];
-        encrypted_data[dataSize - idx - 1] = tmp;
+        std::swap(encrypted_data[idx], encrypted_data[dataSize - idx - 1]);
     }
 
     return encrypted_data;
 }
 
 /* Reorders and decrypts the data using the key. */
-char *Crypto0::decrypt(const char *encrypted_data, unsigned int dataSize)
+std::vector<char> Crypto0::decrypt(std::vector<char> encrypted_data)
 {
-    char tmp;
-    char *decrypted_data = new char[dataSize];
-    int size = key.getSize();
-    _key_type_ key_data = key.getKey();
 
-    std::copy(encrypted_data, encrypted_data + dataSize, decrypted_data);
+    std::vector<char> decrypted_data(encrypted_data);
+    int size = key.getSize();
+    int dataSize = decrypted_data.size();
+    _key_type_ key_data = key.getKey();
 
     for (auto j = size - 1; j >= 0; j--)
     {
         int idx = key_data[j] % dataSize;
-        tmp = decrypted_data[idx];
-        decrypted_data[idx] = decrypted_data[dataSize - idx - 1];
-        decrypted_data[dataSize - idx - 1] = tmp;
+        std::swap(decrypted_data[idx], decrypted_data[dataSize - idx - 1]);
     }
 
     for (auto i = 0; i < dataSize; i++)

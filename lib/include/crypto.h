@@ -10,8 +10,8 @@
 #define _key_type_ std::vector<unsigned char>
 #define _size_type_ unsigned char
 
-SIMPLECRYPTO_API void printhex(const char *data, int size);
-SIMPLECRYPTO_API _key_type_ hexTo(char *hex, int size);
+SIMPLECRYPTO_API void printhex(std::vector<char>);
+SIMPLECRYPTO_API _key_type_ hexTo(std::vector<char>);
 
 namespace SimpleCrypto
 {
@@ -48,8 +48,8 @@ class SIMPLECRYPTO_API Crypto
     Crypto(Key key) : key(key) {};
     virtual ~Crypto() {};
 
-    virtual char *encrypt(const char *data, unsigned int dataSize) = 0;
-    virtual char *decrypt(const char *encrypted_data, unsigned int dataSize) = 0;
+    virtual std::vector<char> encrypt(std::vector<char> data) = 0;
+    virtual std::vector<char> decrypt(std::vector<char> encrypted_data) = 0;
 };
 
 class SIMPLECRYPTO_API Crypto0 : public Crypto
@@ -57,8 +57,8 @@ class SIMPLECRYPTO_API Crypto0 : public Crypto
   public:
     Crypto0(Key key) : Crypto(key) {};
 
-    char *encrypt(const char *data, unsigned int dataSize) override;
-    char *decrypt(const char *encrypted_data, unsigned int dataSize) override;
+    std::vector<char> encrypt(std::vector<char> data) override;
+    std::vector<char> decrypt(std::vector<char> encrypted_data) override;
 };
 
 } // namespace SimpleCrypto

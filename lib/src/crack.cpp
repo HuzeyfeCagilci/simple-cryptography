@@ -32,13 +32,15 @@ int main()
     std::cout << "Read Key: " << key.getKeyStr() << std::endl;
     Crypto0 crypto(key);
 
-    const char *data = "Hattı müdaafa yoktur, sathı müdafaa vardır. O satıh "
-                       "bütün vatandır. Vatanın her karış toprağı, vatandaşın "
-                       "kanıyla ıslanmadıkça, terke tabi değildir.";
+    std::string d = "Hattı müdaafa yoktur, sathı müdafaa vardır. O satıh "
+                    "bütün vatandır. Vatanın her karış toprağı, vatandaşın "
+                    "kanıyla ıslanmadıkça, terke tabi değildir.";
 
-    unsigned int dataSize = strlen(data) + 1;
+    std::vector<char> data(d.begin(), d.end());
 
-    char *encrypted_data = crypto.encrypt(data, dataSize);
+    int dataSize = data.size();
+
+    auto encrypted_data = crypto.encrypt(data);
 
     for (int i = 0; i < dataSize - 1; i++)
     {
