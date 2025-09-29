@@ -11,6 +11,7 @@
 #define _size_type_ unsigned char
 
 SIMPLECRYPTO_API void printhex(const char *data, int size);
+SIMPLECRYPTO_API _key_type_ hexTo(char *hex, int size);
 
 namespace SimpleCrypto
 {

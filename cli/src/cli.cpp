@@ -18,10 +18,11 @@ using namespace SimpleCrypto;
 
 enum flags
 {
-    help = (1 << 1),
-    key_from_file = (1 << 2),
-    data_from_file = (1 << 3),
-    verbose = (1 << 4),
+    help = (1 << 0),
+    key_from_file = (1 << 1),
+    data_from_file = (1 << 2),
+    verbose = (1 << 3),
+    encrypt = (1 << 4),
     decrypt = (1 << 5)
 };
 
@@ -45,7 +46,7 @@ struct param_stc
 #endif
 };
 
-void encrypt()
+void encrypt_()
 {
     Key *key;
     char *data;
@@ -57,8 +58,7 @@ void encrypt()
     }
     else
     {
-        _key_type_ ch;
-        copy(params.key_file.begin(), params.key_file.end(), ch.begin());
+        auto ch = hexTo(params.key_file.data(), params.key_file.size());
         key = new Key(ch);
     }
 
@@ -83,21 +83,36 @@ void encrypt()
     }
     else
     {
+        size = params.data_file.size();
+        data = new char[size + 1];
+        data[size] = 0;
+        copy(params.data_file.begin(), params.data_file.end(), data);
     }
 
     Crypto *cr = new Crypto0(*key);
 
     char *encrypted = cr->encrypt(data, size);
 
-    fstream fs(params.out_file, ios::out | ios::binary);
-    if (!fs.is_open())
+    if (params.out_file == "")
     {
-        cerr << "File Error" << endl;
-        exit(-1);
+        for (int i = 0; i < size; i++)
+        {
+            cout << hex << (unsigned int)encrypted[i];
+        }
+        cout << endl;
     }
+    else
+    {
+        fstream fs(params.out_file, ios::out | ios::binary);
+        if (!fs.is_open())
+        {
+            cerr << "File Error" << endl;
+            exit(-1);
+        }
 
-    fs.write(encrypted, size);
-    fs.close();
+        fs.write(encrypted, size);
+        fs.close();
+    }
 
     if (check_flag(params.flags, verbose))
     {
@@ -108,6 +123,7 @@ void encrypt()
 
     delete encrypted;
     delete cr;
+    delete data;
     delete key;
 }
 
@@ -136,6 +152,18 @@ int main(int argc, char *argv[])
                 exit(-1);
             }
         }
+        else if (strcmp(argv[i], "--key") == 0)
+        {
+            if (argc >= ++i)
+            {
+                params.flags &= ~key_from_file;
+                params.key_file = argv[i];
+            }
+            else
+            {
+                cerr << "Error: No argument after --key" << endl;
+            }
+        }
         else if (strcmp(argv[i], "--data-file") == 0)
         {
             if (argc >= ++i)
@@ -150,6 +178,18 @@ int main(int argc, char *argv[])
                 cerr << "Error: No argument after --data-file" << endl;
             }
         }
+        else if (strcmp(argv[i], "--data") == 0)
+        {
+            if (argc >= ++i)
+            {
+                params.flags &= ~data_from_file;
+                params.data_file = argv[i];
+            }
+            else
+            {
+                cerr << "Error: No argument after --data" << endl;
+            }
+        }
         else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0)
         {
             params.flags |= verbose;
@@ -157,6 +197,10 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[i], "--decrypt") == 0)
         {
             params.flags |= decrypt;
+        }
+        else if (strcmp(argv[i], "--encrypt") == 0)
+        {
+            params.flags |= encrypt;
         }
     }
 
@@ -183,9 +227,9 @@ int main(int argc, char *argv[])
     {
         cout << "decrypt\n";
     }
-    else
+    else if (check_flag(params.flags, encrypt))
     {
-        encrypt();
+        encrypt_();
     }
 
     return 0;
