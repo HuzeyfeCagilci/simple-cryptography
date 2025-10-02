@@ -4,20 +4,21 @@
 
 #include "crypto.h"
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <utility>
 
-void printhex(std::vector<char> data)
+void printhex(std::vector<char> &data)
 {
     int size = data.size();
-    for (auto i = 0; i < size; i++)
+    for (auto i = 0; i < size - (size % 2); i += 2)
     {
-        std::cout << std::hex << (unsigned int)data[i];
-        if ((i + 1) % 4 == 0)
-            std::cout << ' ';
+        unsigned int tmp = (((unsigned char)data[i]) << 16) | (unsigned char)data[i + 1];
+        std::cout << std::hex << tmp;
+        std::cout << ' ';
     }
     std::cout << std::dec;
 }
@@ -48,6 +49,10 @@ _key_type_ hexTo(std::vector<char> hex)
 
 namespace SimpleCrypto
 {
+Key::Key()
+{
+    size = 0;
+}
 
 Key::Key(_key_type_ &key)
 {
@@ -127,8 +132,8 @@ Key generateKey(_size_type_ size)
 {
     _key_type_ key_data(size);
 
-    std::seed_seq seed{time(0)};
-    std::mt19937 generator(seed);
+    static std::seed_seq seed;
+    static std::mt19937 generator{seed};
 
     std::uniform_int_distribution<unsigned char> dist(0, 255);
     for (auto &elem : key_data)
@@ -139,6 +144,53 @@ Key generateKey(_size_type_ size)
     Key generatedKey(key_data);
 
     return generatedKey;
+}
+
+Key extendKey(Key key)
+{
+    int size = key.getSize();
+
+    if (size < 3)
+    {
+        return key;
+    }
+
+    _key_type_ extended;
+    _key_type_ keyV = key.getKey();
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = i + 1; j < size; j++)
+        {
+            unsigned char elm = keyV[i] ^ keyV[j];
+            extended.push_back(elm);
+        }
+    }
+
+    return Key(extended);
+}
+
+std::vector<char> Crypto::shuffle(std::vector<char> data, bool encryption)
+{
+    _key_type_ key_data = key.getKey();
+    std::vector<char> shuffled(data);
+    int size = key.getSize();
+    int dataSize = data.size();
+
+    if (encryption)
+        for (auto j = 0; j < size; j++)
+        {
+            int idx = key_data[j] % dataSize;
+            std::swap(shuffled[idx], shuffled[dataSize - idx - 1]);
+        }
+    else
+        for (auto j = size - 1; j >= 0; j--)
+        {
+            int idx = key_data[j] % dataSize;
+            std::swap(shuffled[idx], shuffled[dataSize - idx - 1]);
+        }
+
+    return shuffled;
 }
 
 /* Encrypts and mixes the data using the key.
@@ -159,11 +211,8 @@ std::vector<char> Crypto0::encrypt(std::vector<char> data)
         }
     }
 
-    for (auto j = 0; j < size; j++)
-    {
-        int idx = key_data[j] % dataSize;
-        std::swap(encrypted_data[idx], encrypted_data[dataSize - idx - 1]);
-    }
+    if (do_shuffle)
+        encrypted_data = shuffle(encrypted_data, true);
 
     return encrypted_data;
 }
@@ -177,11 +226,8 @@ std::vector<char> Crypto0::decrypt(std::vector<char> encrypted_data)
     int dataSize = decrypted_data.size();
     _key_type_ key_data = key.getKey();
 
-    for (auto j = size - 1; j >= 0; j--)
-    {
-        int idx = key_data[j] % dataSize;
-        std::swap(decrypted_data[idx], decrypted_data[dataSize - idx - 1]);
-    }
+    if (do_shuffle)
+        decrypted_data = shuffle(decrypted_data, false);
 
     for (auto i = 0; i < dataSize; i++)
     {
@@ -193,4 +239,24 @@ std::vector<char> Crypto0::decrypt(std::vector<char> encrypted_data)
 
     return decrypted_data;
 }
+
+std::vector<char> Crypto1::encrypt(std::vector<char> data)
+{
+    std::vector<char> encrypted_data(data);
+    int size = key.getSize();
+    int dataSize = data.size();
+    _key_type_ key_data = key.getKey();
+
+    for (auto i = 0; i < dataSize; i++)
+    {
+        encrypted_data[i] = data[i] ^ key_data[i % size];
+    }
+    return encrypted_data;
+}
+
+std::vector<char> Crypto1::decrypt(std::vector<char> data)
+{
+    return encrypt(data);
+}
+
 } // namespace SimpleCrypto

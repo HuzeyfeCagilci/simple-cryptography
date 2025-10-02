@@ -8,9 +8,9 @@
 #include <vector>
 
 #define _key_type_ std::vector<unsigned char>
-#define _size_type_ unsigned char
+#define _size_type_ unsigned long
 
-SIMPLECRYPTO_API void printhex(std::vector<char>);
+SIMPLECRYPTO_API void printhex(std::vector<char> &);
 SIMPLECRYPTO_API _key_type_ hexTo(std::vector<char>);
 
 namespace SimpleCrypto
@@ -23,6 +23,7 @@ class SIMPLECRYPTO_API Key
     _size_type_ size;
 
   public:
+    Key();
     Key(_key_type_ &key);
     Key(const Key &other);
     Key(std::string filename);
@@ -38,11 +39,14 @@ class SIMPLECRYPTO_API Key
 };
 
 SIMPLECRYPTO_API Key generateKey(_size_type_ size);
+SIMPLECRYPTO_API Key extendKey(Key key);
 
 class SIMPLECRYPTO_API Crypto
 {
   protected:
     Key key;
+    std::vector<char> shuffle(std::vector<char> data, bool encryption);
+    bool do_shuffle = true;
 
   public:
     Crypto(Key key) : key(key) {};
@@ -50,6 +54,11 @@ class SIMPLECRYPTO_API Crypto
 
     virtual std::vector<char> encrypt(std::vector<char> data) = 0;
     virtual std::vector<char> decrypt(std::vector<char> encrypted_data) = 0;
+
+    void set_shuffle(bool do_shuffle)
+    {
+        this->do_shuffle = do_shuffle;
+    }
 };
 
 class SIMPLECRYPTO_API Crypto0 : public Crypto
@@ -59,6 +68,18 @@ class SIMPLECRYPTO_API Crypto0 : public Crypto
 
     std::vector<char> encrypt(std::vector<char> data) override;
     std::vector<char> decrypt(std::vector<char> encrypted_data) override;
+};
+
+class SIMPLECRYPTO_API Crypto1 : public Crypto0
+{
+  protected:
+    Crypto1();
+
+  public:
+    Crypto1(Key key) : Crypto0(key) {};
+
+    std::vector<char> encrypt(std::vector<char> data);
+    std::vector<char> decrypt(std::vector<char> encrypted_data);
 };
 
 } // namespace SimpleCrypto
